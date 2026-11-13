@@ -1,32 +1,72 @@
-### Archivo de pruebas · reemplazá las rutas por las de tu enunciado
+### Archivo de pruebas · TP Integrador DAW1 - Taller Mecánico
 ### En IntelliJ: abrí este archivo y tocá el ▶ verde de cada petición.
 
 @base = http://localhost:8080/api
 
 ### Listar
-GET {{base}}/recursos
+GET {{base}}/vehiculos
 
 ### Crear
-POST {{base}}/recursos
+POST {{base}}/vehiculos
 Content-Type: application/json
 
 {
-  "campo1": "valor",
-  "campo2": "valor",
-  "campo3": "valor"
+  "patente": "AB123CD",
+  "marca": "Fiat",
+  "modelo": "Cronos",
+  "clienteId": 1
 }
 
 ### Buscar por id
-GET {{base}}/recursos/1
+GET {{base}}/vehiculos/1
 
 ### Error de validación (400)
-POST {{base}}/recursos
+POST {{base}}/vehiculos
 Content-Type: application/json
 
-{ "campo1": "" }
+{
+  "patente": "123",
+  "marca": "",
+  "modelo": "",
+  "clienteId": null
+}
 
 ### Cambiar estado
-PATCH {{base}}/otro-recurso/1/estado
+PATCH {{base}}/ordenes/1/estado
 Content-Type: application/json
 
-{ "estado": "OTRO_ESTADO" }
+{
+  "estado": "EN_REPARACION"
+}
+
+### Actualizar vehículo
+PUT {{base}}/vehiculos/1
+Content-Type: application/json
+
+{
+  "patente": "AB123CD",
+  "marca": "Fiat",
+  "modelo": "Cronos 1.3",
+  "clienteId": 1
+}
+
+### Eliminar vehículo
+DELETE {{base}}/vehiculos/1
+
+### Listar clientes
+GET {{base}}/clientes
+
+### Crear cliente
+POST {{base}}/clientes
+Content-Type: application/json
+
+{
+  "nombre": "Carlos Ruiz",
+  "telefono": "3825123456"
+}
+
+### Listar órdenes
+GET {{base}}/ordenes
+
+### Filtrar órdenes por estado
+GET {{base}}/ordenes?estado=EN_REPARACION
