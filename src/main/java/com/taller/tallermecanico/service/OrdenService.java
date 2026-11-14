@@ -11,6 +11,7 @@ import com.taller.tallermecanico.repository.VehiculoRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
+import com.taller.tallermecanico.repository.RepuestoUtilizadoRepository;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.Map;
@@ -21,12 +22,16 @@ public class OrdenService {
 
     private final OrdenRepository ordenRepository;
     private final VehiculoRepository vehiculoRepository;
+    private final RepuestoUtilizadoRepository repuestoUtilizadoRepository;
 
     public OrdenService(
             OrdenRepository ordenRepository,
-            VehiculoRepository vehiculoRepository) {
+            VehiculoRepository vehiculoRepository,
+            RepuestoUtilizadoRepository repuestoUtilizadoRepository) {
+
         this.ordenRepository = ordenRepository;
         this.vehiculoRepository = vehiculoRepository;
+        this.repuestoUtilizadoRepository = repuestoUtilizadoRepository;
     }
 
     public List<Orden> listar(EstadoOrden estado) {
@@ -147,7 +152,16 @@ public class OrdenService {
 
     @Transactional
     public void eliminar(Long id) {
+
         Orden orden = buscarPorId(id);
+
+        boolean tieneRepuestosUtilizados = repuestoUtilizadoRepository.existsByOrdenId(id);
+
+        if (tieneRepuestosUtilizados) {
+            throw new ConflictoException(
+                    "No se puede eliminar una orden que tiene repuestos utilizados");
+        }
+
         ordenRepository.delete(orden);
     }
 

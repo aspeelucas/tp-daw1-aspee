@@ -15,6 +15,9 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.time.YearMonth;
 import java.util.Map;
 import java.math.BigDecimal;
+import com.taller.tallermecanico.model.RepuestoUtilizado;
+import com.taller.tallermecanico.service.RepuestoUtilizadoService;
+import jakarta.validation.constraints.Min;
 import java.net.URI;
 import java.util.List;
 
@@ -23,9 +26,14 @@ import java.util.List;
 public class OrdenController {
 
         private final OrdenService ordenService;
+        private final RepuestoUtilizadoService repuestoUtilizadoService;
 
-        public OrdenController(OrdenService ordenService) {
+        public OrdenController(
+                        OrdenService ordenService,
+                        RepuestoUtilizadoService repuestoUtilizadoService) {
+
                 this.ordenService = ordenService;
+                this.repuestoUtilizadoService = repuestoUtilizadoService;
         }
 
         private OrdenDTO convertirADTO(Orden orden) {
@@ -120,6 +128,44 @@ public class OrdenController {
                                 id, datos.estado());
 
                 return convertirADTO(actualizada);
+        }
+
+        public record DatosUsoRepuesto(
+                        @NotNull(message = "El repuestoId es obligatorio") Long repuestoId,
+
+                        @NotNull(message = "La cantidad es obligatoria") @Min(value = 1, message = "La cantidad debe ser mayor a cero") Integer cantidad) {
+        }
+
+        public record RespuestaUsoRepuesto(
+                        Long id,
+                        Long ordenId,
+                        Long repuestoId,
+                        Integer cantidad,
+                        BigDecimal precioUnitario,
+                        BigDecimal subtotal) {
+        }
+
+        @PostMapping("/{id}/repuestos")
+        public ResponseEntity<RespuestaUsoRepuesto> agregarRepuesto(
+                        @PathVariable Long id,
+                        @Valid @RequestBody DatosUsoRepuesto datos) {
+
+                RepuestoUtilizado uso = repuestoUtilizadoService.registrarUso(
+                                id,
+                                datos.repuestoId(),
+                                datos.cantidad());
+
+                RespuestaUsoRepuesto respuesta = new RespuestaUsoRepuesto(
+                                uso.getId(),
+                                uso.getOrden().getId(),
+                                uso.getRepuesto().getId(),
+                                uso.getCantidad(),
+                                uso.getPrecioUnitario(),
+                                uso.getSubtotal());
+
+                return ResponseEntity
+                                .status(201)
+                                .body(respuesta);
         }
 
         @DeleteMapping("/{id}")
