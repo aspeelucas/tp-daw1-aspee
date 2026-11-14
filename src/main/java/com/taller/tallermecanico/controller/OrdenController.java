@@ -45,6 +45,8 @@ public class OrdenController {
                 dto.setDescripcion(orden.getDescripcion());
                 dto.setEstado(orden.getEstado());
                 dto.setCostoFinal(orden.getCostoFinal());
+                dto.setCostoRepuestos(
+                                ordenService.calcularCostoRepuestos(orden.getId()));
                 dto.setFechaIngreso(orden.getFechaIngreso());
                 dto.setFechaInicioReparacion(orden.getFechaInicioReparacion());
                 dto.setFechaTerminacion(orden.getFechaTerminacion());

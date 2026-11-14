@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import com.taller.tallermecanico.repository.RepuestoUtilizadoRepository;
 import java.time.LocalDateTime;
+import com.taller.tallermecanico.exception.DatosInvalidosException;
 import java.time.YearMonth;
 import java.util.Map;
 import java.util.List;
@@ -23,6 +24,20 @@ public class OrdenService {
     private final OrdenRepository ordenRepository;
     private final VehiculoRepository vehiculoRepository;
     private final RepuestoUtilizadoRepository repuestoUtilizadoRepository;
+
+    private BigDecimal calcularCostoRepuestosInterno(Long ordenId) {
+
+        return repuestoUtilizadoRepository.findByOrdenId(ordenId)
+                .stream()
+                .map(uso -> uso.getSubtotal())
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    @Transactional(readOnly = true)
+    public BigDecimal calcularCostoRepuestos(Long ordenId) {
+
+        return calcularCostoRepuestosInterno(ordenId);
+    }
 
     public OrdenService(
             OrdenRepository ordenRepository,
@@ -81,6 +96,15 @@ public class OrdenService {
             BigDecimal costoFinal) {
 
         Orden orden = buscarPorId(id);
+
+        BigDecimal costoRepuestos = calcularCostoRepuestosInterno(id);
+
+        if (costoFinal != null
+                && costoFinal.compareTo(costoRepuestos) < 0) {
+
+            throw new DatosInvalidosException(
+                    "El costo final no puede ser inferior al costo de los repuestos");
+        }
 
         if (descripcion != null) {
             orden.setDescripcion(descripcion);

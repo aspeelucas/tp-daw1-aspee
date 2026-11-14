@@ -1,3 +1,4 @@
+
 package com.taller.tallermecanico.exception;
 
 import java.util.LinkedHashMap;
@@ -32,6 +33,19 @@ public class GlobalExceptionHandler {
                 problema.setTitle("Datos inválidos");
                 problema.setDetail("La petición tiene errores");
                 problema.setProperty("errores", errores);
+
+                return ResponseEntity.badRequest().body(problema);
+        }
+
+        @ExceptionHandler(DatosInvalidosException.class)
+        public ResponseEntity<ProblemDetail> manejarDatosInvalidos(
+                        DatosInvalidosException ex) {
+
+                ProblemDetail problema = ProblemDetail.forStatus(
+                                HttpStatus.BAD_REQUEST);
+
+                problema.setTitle("Datos inválidos");
+                problema.setDetail(ex.getMessage());
 
                 return ResponseEntity.badRequest().body(problema);
         }
@@ -76,5 +90,4 @@ public class GlobalExceptionHandler {
                                 .status(HttpStatus.CONFLICT)
                                 .body(problema);
         }
-
 }

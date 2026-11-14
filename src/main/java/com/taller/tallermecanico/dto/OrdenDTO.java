@@ -22,6 +22,8 @@ public class OrdenDTO {
 
     private BigDecimal costoFinal;
 
+    private BigDecimal costoRepuestos;
+
     private LocalDateTime fechaIngreso;
 
     private LocalDateTime fechaInicioReparacion;
@@ -123,6 +125,14 @@ public class OrdenDTO {
 
     public void setHorasEnReparacion(Double horasEnReparacion) {
         this.horasEnReparacion = horasEnReparacion;
+    }
+
+    public BigDecimal getCostoRepuestos() {
+        return costoRepuestos;
+    }
+
+    public void setCostoRepuestos(BigDecimal costoRepuestos) {
+        this.costoRepuestos = costoRepuestos;
     }
 
 }
