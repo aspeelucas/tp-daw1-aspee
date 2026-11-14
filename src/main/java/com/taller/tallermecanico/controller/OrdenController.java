@@ -12,7 +12,8 @@ import jakarta.validation.constraints.NotNull;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-
+import java.time.YearMonth;
+import java.util.Map;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.util.List;
@@ -54,6 +55,13 @@ public class OrdenController {
                                 .stream()
                                 .map(this::convertirADTO)
                                 .toList();
+        }
+
+        @GetMapping("/facturacion")
+        public Map<String, Object> obtenerFacturacionMensual(
+                        @RequestParam YearMonth mes) {
+
+                return ordenService.obtenerFacturacionMensual(mes);
         }
 
         @GetMapping("/{id}")

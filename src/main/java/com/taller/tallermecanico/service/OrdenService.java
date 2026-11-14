@@ -8,12 +8,12 @@ import com.taller.tallermecanico.model.Orden;
 import com.taller.tallermecanico.model.Vehiculo;
 import com.taller.tallermecanico.repository.OrdenRepository;
 import com.taller.tallermecanico.repository.VehiculoRepository;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
+import java.util.Map;
 import java.util.List;
 
 @Service
@@ -150,4 +150,27 @@ public class OrdenService {
         Orden orden = buscarPorId(id);
         ordenRepository.delete(orden);
     }
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> obtenerFacturacionMensual(YearMonth mes) {
+
+        LocalDateTime inicio = mes.atDay(1).atStartOfDay();
+        LocalDateTime fin = mes.plusMonths(1).atDay(1).atStartOfDay();
+
+        List<Orden> ordenes = ordenRepository
+                .buscarOrdenesPorEstadoYPeriodoDeEntrega(
+                        EstadoOrden.ENTREGADO,
+                        inicio,
+                        fin);
+
+        BigDecimal totalFacturado = ordenes.stream()
+                .map(Orden::getCostoFinal)
+                .filter(costo -> costo != null)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        return Map.of(
+                "cantidadOrdenes", ordenes.size(),
+                "totalFacturado", totalFacturado);
+    }
+
 }
