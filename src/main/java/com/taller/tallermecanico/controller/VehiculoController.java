@@ -9,6 +9,8 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import com.taller.tallermecanico.dto.OrdenDTO;
+import com.taller.tallermecanico.model.Orden;
 
 import java.net.URI;
 import java.util.List;
@@ -102,4 +104,25 @@ public class VehiculoController {
 
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/patente/{patente}/historial")
+    public List<OrdenDTO> obtenerHistorialPorPatente(
+            @PathVariable String patente) {
+
+        return vehiculoService.obtenerHistorialPorPatente(patente)
+                .stream()
+                .map(orden -> {
+                    OrdenDTO dto = new OrdenDTO();
+
+                    dto.setId(orden.getId());
+                    dto.setVehiculoId(orden.getVehiculo().getId());
+                    dto.setDescripcion(orden.getDescripcion());
+                    dto.setEstado(orden.getEstado());
+                    dto.setCostoFinal(orden.getCostoFinal());
+
+                    return dto;
+                })
+                .toList();
+    }
+
 }

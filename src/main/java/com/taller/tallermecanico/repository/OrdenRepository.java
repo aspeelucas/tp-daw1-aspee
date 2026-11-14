@@ -17,4 +17,7 @@ public interface OrdenRepository extends JpaRepository<Orden, Long> {
     boolean existsByVehiculoIdAndEstadoNotIn(
             Long vehiculoId,
             List<EstadoOrden> estados);
+
+    java.util.List<Orden> findByVehiculoIdOrderByIdDesc(Long vehiculoId);
+
 }
