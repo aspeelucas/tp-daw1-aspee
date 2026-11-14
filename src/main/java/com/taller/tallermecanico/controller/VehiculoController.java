@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import com.taller.tallermecanico.dto.OrdenDTO;
+import com.taller.tallermecanico.service.OrdenService;
 
 import java.net.URI;
 import java.util.List;
@@ -19,9 +20,14 @@ import java.util.List;
 public class VehiculoController {
 
     private final VehiculoService vehiculoService;
+    private final OrdenService ordenService;
 
-    public VehiculoController(VehiculoService vehiculoService) {
+    public VehiculoController(
+            VehiculoService vehiculoService,
+            OrdenService ordenService) {
+
         this.vehiculoService = vehiculoService;
+        this.ordenService = ordenService;
     }
 
     private VehiculoDTO convertirADTO(Vehiculo vehiculo) {
@@ -120,6 +126,8 @@ public class VehiculoController {
                     dto.setDescripcion(orden.getDescripcion());
                     dto.setEstado(orden.getEstado());
                     dto.setCostoFinal(orden.getCostoFinal());
+                    dto.setCostoRepuestos(
+                            ordenService.calcularCostoRepuestos(orden.getId()));
 
                     // Fechas de la reparación
                     dto.setFechaIngreso(orden.getFechaIngreso());

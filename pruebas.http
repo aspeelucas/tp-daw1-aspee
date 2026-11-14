@@ -1,24 +1,65 @@
+
 ### Archivo de pruebas · TP Integrador DAW1 - Taller Mecánico
-### En IntelliJ: abrí este archivo y tocá el ▶ verde de cada petición.
+### En VS Code: ejecutar cada petición mediante Send Request (REST Client).
 
 @base = http://localhost:8080/api
+@clienteId = 1
+@vehiculoId = 1
+@ordenId = 1
+@repuestoId = 1
+@patente = AB123CD
+@mes = 2026-11
 
-### Listar
+
+### ==================================================
+### 1. CLIENTES
+### ==================================================
+
+### Listar clientes
+GET {{base}}/clientes
+
+### Crear cliente (solo si no existe)
+POST {{base}}/clientes
+Content-Type: application/json
+
+{
+  "nombre": "Carlos Ruiz",
+  "telefono": "3825123456"
+}
+
+
+
+### ==================================================
+### 2. VEHÍCULOS
+### ==================================================
+
+### Listar vehículos
 GET {{base}}/vehiculos
 
-### Crear
+### Crear vehículo (solo si no existe)
 POST {{base}}/vehiculos
 Content-Type: application/json
 
 {
-  "patente": "AB123CD",
+  "patente": "{{patente}}",
   "marca": "Fiat",
   "modelo": "Cronos",
-  "clienteId": 1
+  "clienteId": {{clienteId}}
 }
 
-### Buscar por id
-GET {{base}}/vehiculos/1
+### Buscar vehículo por ID
+GET {{base}}/vehiculos/{{vehiculoId}}
+
+### Actualizar vehículo
+PUT {{base}}/vehiculos/{{vehiculoId}}
+Content-Type: application/json
+
+{
+  "patente": "{{patente}}",
+  "marca": "Fiat",
+  "modelo": "Cronos 1.3",
+  "clienteId": {{clienteId}}
+}
 
 ### Error de validación (400)
 POST {{base}}/vehiculos
@@ -31,42 +72,165 @@ Content-Type: application/json
   "clienteId": null
 }
 
-### Cambiar estado
-PATCH {{base}}/ordenes/1/estado
-Content-Type: application/json
+### Eliminar vehículo (prueba opcional)
+### No ejecutar si tiene órdenes asociadas.
+DELETE {{base}}/vehiculos/{{vehiculoId}}
 
-{
-  "estado": "EN_REPARACION"
-}
 
-### Actualizar vehículo
-PUT {{base}}/vehiculos/1
-Content-Type: application/json
-
-{
-  "patente": "AB123CD",
-  "marca": "Fiat",
-  "modelo": "Cronos 1.3",
-  "clienteId": 1
-}
-
-### Eliminar vehículo
-DELETE {{base}}/vehiculos/1
-
-### Listar clientes
-GET {{base}}/clientes
-
-### Crear cliente
-POST {{base}}/clientes
-Content-Type: application/json
-
-{
-  "nombre": "Carlos Ruiz",
-  "telefono": "3825123456"
-}
+### ==================================================
+### 3. ÓRDENES DE REPARACIÓN
+### ==================================================
 
 ### Listar órdenes
 GET {{base}}/ordenes
 
 ### Filtrar órdenes por estado
 GET {{base}}/ordenes?estado=EN_REPARACION
+
+### Buscar orden por ID
+GET {{base}}/ordenes/{{ordenId}}
+
+### Crear orden (solo si no tiene una orden abierta)
+POST {{base}}/ordenes
+Content-Type: application/json
+
+{
+  "vehiculoId": {{vehiculoId}},
+  "descripcion": "Cambio de aceite y filtros"
+}
+
+
+### ==================================================
+### 4. HISTORIAL DE REPARACIONES POR PATENTE
+### ==================================================
+
+### Consultar historial de un vehículo
+GET {{base}}/vehiculos/patente/{{patente}}/historial
+
+
+### ==================================================
+### 5. INVENTARIO Y REPUESTOS
+### ==================================================
+
+### Listar todos los repuestos
+GET {{base}}/repuestos
+
+### Buscar repuesto por ID
+GET {{base}}/repuestos/{{repuestoId}}
+
+### Crear repuesto (solo ejecutar una vez)
+POST {{base}}/repuestos
+Content-Type: application/json
+
+{
+  "nombre": "Filtro de aceite",
+  "precio": 12000,
+  "stock": 10
+}
+
+
+### ==================================================
+### 6. REPUESTOS UTILIZADOS EN ÓRDENES
+### ==================================================
+
+### Registrar utilización de repuestos
+### Esta operación descuenta unidades del inventario.
+POST {{base}}/ordenes/{{ordenId}}/repuestos
+Content-Type: application/json
+
+{
+  "repuestoId": {{repuestoId}},
+  "cantidad": 2
+}
+
+
+### ==================================================
+### 7. COSTOS DE REPARACIÓN
+### ==================================================
+
+### Consultar costo de repuestos de una orden
+GET {{base}}/ordenes/{{ordenId}}
+
+### Intentar establecer un costo inferior al de los repuestos
+### Resultado esperado: HTTP 400 - Datos inválidos.
+PUT {{base}}/ordenes/{{ordenId}}
+Content-Type: application/json
+
+{
+  "descripcion": "Cambio de aceite y filtros",
+  "costoFinal": 20000
+}
+
+### Actualizar costo final de la orden y valido
+PUT {{base}}/ordenes/{{ordenId}}
+Content-Type: application/json
+
+{
+  "descripcion": "Cambio de aceite y filtros",
+  "costoFinal": 50000
+}
+
+
+### ==================================================
+### 8. VALIDACIONES Y RESTRICCIONES
+### ==================================================
+
+### Intentar agregar más unidades que las disponibles
+### Resultado esperado: HTTP 409 - Stock insuficiente.
+POST {{base}}/ordenes/{{ordenId}}/repuestos
+Content-Type: application/json
+
+{
+  "repuestoId": {{repuestoId}},
+  "cantidad": 100
+}
+
+### Intentar eliminar una orden con repuestos utilizados
+### Resultado esperado: HTTP 409 - Conflicto.
+DELETE {{base}}/ordenes/{{ordenId}}
+
+
+### ==================================================
+### 9. CICLO DE REPARACIÓN Y REGISTRO DE FECHAS
+### ==================================================
+
+### Cambiar estado a EN_REPARACION
+### Ejecutar solamente si la orden está INGRESADA.
+PATCH {{base}}/ordenes/{{ordenId}}/estado
+Content-Type: application/json
+
+{
+  "estado": "EN_REPARACION"
+}
+
+### Marcar reparación como terminada
+### Ejecutar solamente si la orden está EN_REPARACION.
+PATCH {{base}}/ordenes/{{ordenId}}/estado
+Content-Type: application/json
+
+{
+  "estado": "TERMINADO"
+}
+
+### Consultar fechas y horas de reparación
+GET {{base}}/ordenes/{{ordenId}}
+
+### Marcar orden como entregada
+### Ejecutar solamente si está TERMINADA y tiene costo final.
+PATCH {{base}}/ordenes/{{ordenId}}/estado
+Content-Type: application/json
+
+{
+  "estado": "ENTREGADO"
+}
+
+### Consultar orden entregada
+GET {{base}}/ordenes/{{ordenId}}
+
+
+### ==================================================
+### 10. FACTURACIÓN MENSUAL
+### ==================================================
+
+### Consultar facturación del mes
+GET {{base}}/ordenes/facturacion?mes={{mes}}
