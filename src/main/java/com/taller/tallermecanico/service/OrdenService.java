@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -63,6 +64,7 @@ public class OrdenService {
         orden.setVehiculo(vehiculo);
         orden.setDescripcion(descripcion);
         orden.setEstado(EstadoOrden.INGRESADO);
+        orden.setFechaIngreso(LocalDateTime.now());
 
         return ordenRepository.save(orden);
     }
@@ -117,9 +119,30 @@ public class OrdenService {
                     "No se puede entregar una orden sin costo final");
         }
 
+        LocalDateTime fechaCambio = LocalDateTime.now();
+
+        switch (nuevoEstado) {
+            case EN_REPARACION ->
+                orden.setFechaInicioReparacion(fechaCambio);
+
+            case TERMINADO ->
+                orden.setFechaTerminacion(fechaCambio);
+
+            case ENTREGADO ->
+                orden.setFechaEntrega(fechaCambio);
+
+            case CANCELADO ->
+                orden.setFechaCancelacion(fechaCambio);
+
+            case INGRESADO -> {
+                // El ingreso se registra al crear la orden.
+            }
+        }
+
         orden.setEstado(nuevoEstado);
 
         return ordenRepository.save(orden);
+
     }
 
     @Transactional

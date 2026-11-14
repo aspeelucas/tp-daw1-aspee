@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.Duration;
 
 @Entity
 @Table(name = "ordenes")
@@ -27,6 +29,16 @@ public class Orden {
     private EstadoOrden estado = EstadoOrden.INGRESADO;
 
     private BigDecimal costoFinal;
+
+    private LocalDateTime fechaIngreso;
+
+    private LocalDateTime fechaInicioReparacion;
+
+    private LocalDateTime fechaTerminacion;
+
+    private LocalDateTime fechaEntrega;
+
+    private LocalDateTime fechaCancelacion;
 
     public Orden() {
     }
@@ -70,4 +82,60 @@ public class Orden {
     public void setCostoFinal(BigDecimal costoFinal) {
         this.costoFinal = costoFinal;
     }
+
+    public LocalDateTime getFechaIngreso() {
+        return fechaIngreso;
+    }
+
+    public void setFechaIngreso(LocalDateTime fechaIngreso) {
+        this.fechaIngreso = fechaIngreso;
+    }
+
+    public LocalDateTime getFechaInicioReparacion() {
+        return fechaInicioReparacion;
+    }
+
+    public void setFechaInicioReparacion(LocalDateTime fechaInicioReparacion) {
+        this.fechaInicioReparacion = fechaInicioReparacion;
+    }
+
+    public LocalDateTime getFechaTerminacion() {
+        return fechaTerminacion;
+    }
+
+    public void setFechaTerminacion(LocalDateTime fechaTerminacion) {
+        this.fechaTerminacion = fechaTerminacion;
+    }
+
+    public LocalDateTime getFechaEntrega() {
+        return fechaEntrega;
+    }
+
+    public void setFechaEntrega(LocalDateTime fechaEntrega) {
+        this.fechaEntrega = fechaEntrega;
+    }
+
+    public LocalDateTime getFechaCancelacion() {
+        return fechaCancelacion;
+    }
+
+    public void setFechaCancelacion(LocalDateTime fechaCancelacion) {
+        this.fechaCancelacion = fechaCancelacion;
+    }
+
+    @Transient
+    public Double getHorasEnReparacion() {
+
+        if (fechaInicioReparacion == null
+                || fechaTerminacion == null) {
+            return null;
+        }
+
+        Duration duracion = Duration.between(
+                fechaInicioReparacion,
+                fechaTerminacion);
+
+        return duracion.toSeconds() / 3600.0;
+    }
+
 }
