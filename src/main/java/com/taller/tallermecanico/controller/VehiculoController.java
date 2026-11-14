@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import com.taller.tallermecanico.dto.OrdenDTO;
 
 import java.net.URI;
 import java.util.List;
@@ -102,4 +103,38 @@ public class VehiculoController {
 
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/patente/{patente}/historial")
+    public List<OrdenDTO> obtenerHistorialPorPatente(
+            @PathVariable String patente) {
+
+        return vehiculoService.obtenerHistorialPorPatente(patente)
+                .stream()
+
+                .map(orden -> {
+                    OrdenDTO dto = new OrdenDTO();
+
+                    // Campos originales
+                    dto.setId(orden.getId());
+                    dto.setVehiculoId(orden.getVehiculo().getId());
+                    dto.setDescripcion(orden.getDescripcion());
+                    dto.setEstado(orden.getEstado());
+                    dto.setCostoFinal(orden.getCostoFinal());
+
+                    // Fechas de la reparación
+                    dto.setFechaIngreso(orden.getFechaIngreso());
+                    dto.setFechaInicioReparacion(orden.getFechaInicioReparacion());
+                    dto.setFechaTerminacion(orden.getFechaTerminacion());
+                    dto.setFechaEntrega(orden.getFechaEntrega());
+                    dto.setFechaCancelacion(orden.getFechaCancelacion());
+
+                    // Tiempo total de reparación
+                    dto.setHorasEnReparacion(orden.getHorasEnReparacion());
+
+                    return dto;
+                })
+
+                .toList();
+    }
+
 }

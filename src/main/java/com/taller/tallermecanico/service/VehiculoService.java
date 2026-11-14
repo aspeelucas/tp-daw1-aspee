@@ -7,6 +7,9 @@ import com.taller.tallermecanico.model.Vehiculo;
 import com.taller.tallermecanico.repository.ClienteRepository;
 import com.taller.tallermecanico.repository.VehiculoRepository;
 
+import com.taller.tallermecanico.model.Orden;
+import com.taller.tallermecanico.repository.OrdenRepository;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,13 +20,16 @@ public class VehiculoService {
 
     private final VehiculoRepository vehiculoRepository;
     private final ClienteRepository clienteRepository;
+    private final OrdenRepository ordenRepository;
 
     public VehiculoService(
             VehiculoRepository vehiculoRepository,
-            ClienteRepository clienteRepository) {
+            ClienteRepository clienteRepository,
+            OrdenRepository ordenRepository) {
 
         this.vehiculoRepository = vehiculoRepository;
         this.clienteRepository = clienteRepository;
+        this.ordenRepository = ordenRepository;
     }
 
     public List<Vehiculo> listar() {
@@ -91,5 +97,16 @@ public class VehiculoService {
         Vehiculo vehiculo = buscarPorId(id);
         vehiculoRepository.delete(vehiculo);
     }
-}
 
+    @Transactional(readOnly = true)
+    public List<Orden> obtenerHistorialPorPatente(String patente) {
+
+        Vehiculo vehiculo = vehiculoRepository.findByPatente(patente)
+                .orElseThrow(() -> new RecursoNoEncontradoException(
+                        "No existe un vehiculo con patente " + patente));
+
+        return ordenRepository.findByVehiculoIdOrderByIdDesc(
+                vehiculo.getId());
+    }
+
+}

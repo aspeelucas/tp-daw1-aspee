@@ -12,8 +12,12 @@ import jakarta.validation.constraints.NotNull;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-
+import java.time.YearMonth;
+import java.util.Map;
 import java.math.BigDecimal;
+import com.taller.tallermecanico.model.RepuestoUtilizado;
+import com.taller.tallermecanico.service.RepuestoUtilizadoService;
+import jakarta.validation.constraints.Min;
 import java.net.URI;
 import java.util.List;
 
@@ -21,98 +25,156 @@ import java.util.List;
 @RequestMapping("/api/ordenes")
 public class OrdenController {
 
-    private final OrdenService ordenService;
+        private final OrdenService ordenService;
+        private final RepuestoUtilizadoService repuestoUtilizadoService;
 
-    public OrdenController(OrdenService ordenService) {
-        this.ordenService = ordenService;
-    }
+        public OrdenController(
+                        OrdenService ordenService,
+                        RepuestoUtilizadoService repuestoUtilizadoService) {
 
-    private OrdenDTO convertirADTO(Orden orden) {
+                this.ordenService = ordenService;
+                this.repuestoUtilizadoService = repuestoUtilizadoService;
+        }
 
-        OrdenDTO dto = new OrdenDTO();
+        private OrdenDTO convertirADTO(Orden orden) {
 
-        dto.setId(orden.getId());
-        dto.setVehiculoId(orden.getVehiculo().getId());
-        dto.setDescripcion(orden.getDescripcion());
-        dto.setEstado(orden.getEstado());
-        dto.setCostoFinal(orden.getCostoFinal());
+                OrdenDTO dto = new OrdenDTO();
 
-        return dto;
-    }
+                dto.setId(orden.getId());
+                dto.setVehiculoId(orden.getVehiculo().getId());
+                dto.setDescripcion(orden.getDescripcion());
+                dto.setEstado(orden.getEstado());
+                dto.setCostoFinal(orden.getCostoFinal());
+                dto.setCostoRepuestos(
+                                ordenService.calcularCostoRepuestos(orden.getId()));
+                dto.setFechaIngreso(orden.getFechaIngreso());
+                dto.setFechaInicioReparacion(orden.getFechaInicioReparacion());
+                dto.setFechaTerminacion(orden.getFechaTerminacion());
+                dto.setFechaEntrega(orden.getFechaEntrega());
+                dto.setFechaCancelacion(orden.getFechaCancelacion());
+                dto.setHorasEnReparacion(orden.getHorasEnReparacion());
 
-    @GetMapping
-    public List<OrdenDTO> listar(
-            @RequestParam(required = false) EstadoOrden estado) {
+                return dto;
+        }
 
-        return ordenService.listar(estado)
-                .stream()
-                .map(this::convertirADTO)
-                .toList();
-    }
+        @GetMapping
+        public List<OrdenDTO> listar(
+                        @RequestParam(required = false) EstadoOrden estado) {
 
-    @GetMapping("/{id}")
-    public OrdenDTO buscarPorId(@PathVariable Long id) {
+                return ordenService.listar(estado)
+                                .stream()
+                                .map(this::convertirADTO)
+                                .toList();
+        }
 
-        return convertirADTO(ordenService.buscarPorId(id));
-    }
+        @GetMapping("/facturacion")
+        public Map<String, Object> obtenerFacturacionMensual(
+                        @RequestParam YearMonth mes) {
 
-    @PostMapping
-    public ResponseEntity<OrdenDTO> crear(
-            @Valid @RequestBody OrdenDTO datos) {
+                return ordenService.obtenerFacturacionMensual(mes);
+        }
 
-        Orden creada = ordenService.crear(
-                datos.getVehiculoId(),
-                datos.getDescripcion());
+        @GetMapping("/{id}")
+        public OrdenDTO buscarPorId(@PathVariable Long id) {
 
-        URI location = ServletUriComponentsBuilder
-                .fromCurrentRequest()
-                .path("/{id}")
-                .buildAndExpand(creada.getId())
-                .toUri();
+                return convertirADTO(ordenService.buscarPorId(id));
+        }
 
-        return ResponseEntity
-                .created(location)
-                .body(convertirADTO(creada));
-    }
+        @PostMapping
+        public ResponseEntity<OrdenDTO> crear(
+                        @Valid @RequestBody OrdenDTO datos) {
 
-    public record ActualizacionOrden(
-            String descripcion,
-            BigDecimal costoFinal) {
-    }
+                Orden creada = ordenService.crear(
+                                datos.getVehiculoId(),
+                                datos.getDescripcion());
 
-    @PutMapping("/{id}")
-    public OrdenDTO actualizar(
-            @PathVariable Long id,
-            @RequestBody ActualizacionOrden datos) {
+                URI location = ServletUriComponentsBuilder
+                                .fromCurrentRequest()
+                                .path("/{id}")
+                                .buildAndExpand(creada.getId())
+                                .toUri();
 
-        Orden actualizada = ordenService.actualizar(
-                id,
-                datos.descripcion(),
-                datos.costoFinal());
+                return ResponseEntity
+                                .created(location)
+                                .body(convertirADTO(creada));
+        }
 
-        return convertirADTO(actualizada);
-    }
+        public record ActualizacionOrden(
+                        String descripcion,
+                        BigDecimal costoFinal) {
+        }
 
-    public record CambioEstado(
-            @NotNull(message = "El estado es obligatorio") EstadoOrden estado) {
-    }
+        @PutMapping("/{id}")
+        public OrdenDTO actualizar(
+                        @PathVariable Long id,
+                        @RequestBody ActualizacionOrden datos) {
 
-    @PatchMapping("/{id}/estado")
-    public OrdenDTO cambiarEstado(
-            @PathVariable Long id,
-            @Valid @RequestBody CambioEstado datos) {
+                Orden actualizada = ordenService.actualizar(
+                                id,
+                                datos.descripcion(),
+                                datos.costoFinal());
 
-        Orden actualizada = ordenService.cambiarEstado(
-                id, datos.estado());
+                return convertirADTO(actualizada);
+        }
 
-        return convertirADTO(actualizada);
-    }
+        public record CambioEstado(
+                        @NotNull(message = "El estado es obligatorio") EstadoOrden estado) {
+        }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+        @PatchMapping("/{id}/estado")
+        public OrdenDTO cambiarEstado(
+                        @PathVariable Long id,
+                        @Valid @RequestBody CambioEstado datos) {
 
-        ordenService.eliminar(id);
+                Orden actualizada = ordenService.cambiarEstado(
+                                id, datos.estado());
 
-        return ResponseEntity.noContent().build();
-    }
+                return convertirADTO(actualizada);
+        }
+
+        public record DatosUsoRepuesto(
+                        @NotNull(message = "El repuestoId es obligatorio") Long repuestoId,
+
+                        @NotNull(message = "La cantidad es obligatoria") @Min(value = 1, message = "La cantidad debe ser mayor a cero") Integer cantidad) {
+        }
+
+        public record RespuestaUsoRepuesto(
+                        Long id,
+                        Long ordenId,
+                        Long repuestoId,
+                        Integer cantidad,
+                        BigDecimal precioUnitario,
+                        BigDecimal subtotal) {
+        }
+
+        @PostMapping("/{id}/repuestos")
+        public ResponseEntity<RespuestaUsoRepuesto> agregarRepuesto(
+                        @PathVariable Long id,
+                        @Valid @RequestBody DatosUsoRepuesto datos) {
+
+                RepuestoUtilizado uso = repuestoUtilizadoService.registrarUso(
+                                id,
+                                datos.repuestoId(),
+                                datos.cantidad());
+
+                RespuestaUsoRepuesto respuesta = new RespuestaUsoRepuesto(
+                                uso.getId(),
+                                uso.getOrden().getId(),
+                                uso.getRepuesto().getId(),
+                                uso.getCantidad(),
+                                uso.getPrecioUnitario(),
+                                uso.getSubtotal());
+
+                return ResponseEntity
+                                .status(201)
+                                .body(respuesta);
+        }
+
+        @DeleteMapping("/{id}")
+        public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+
+                ordenService.eliminar(id);
+
+                return ResponseEntity.noContent().build();
+        }
 }
