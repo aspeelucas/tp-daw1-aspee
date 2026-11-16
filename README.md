@@ -51,6 +51,17 @@ Estados de Orden: `INGRESADO → EN_REPARACION → TERMINADO → ENTREGADO`. Des
 | PATCH  | /api/ordenes/{id}/estado     | Cambia el estado de una orden             | 200, 400, 404, 409 |
 | DELETE | /api/ordenes/{id}            | Borra orden                               | 204, 404           |
 
+### Endpoints adicionales
+
+| Método | Ruta | Descripción | Respuestas |
+| --- | --- | --- | --- |
+| GET | /api/repuestos | Lista los repuestos disponibles | 200 |
+| GET | /api/repuestos/{id} | Busca un repuesto por ID | 200, 404 |
+| POST | /api/repuestos | Crea un repuesto con nombre, precio y stock | 201, 400 |
+| POST | /api/ordenes/{id}/repuestos | Registra repuestos utilizados y descuenta el stock | 201, 400, 404, 409 |
+| GET | /api/vehiculos/patente/{patente}/historial | Devuelve el historial de reparaciones del vehículo, de la más reciente a la más antigua | 200, 404 |
+| GET | /api/ordenes/facturacion?mes=2026-11 | Devuelve la cantidad de órdenes entregadas y el total facturado durante el mes | 200 |
+
 ## Reglas de negocio
 
 1. No se permiten vehículos con patentes repetidas. Si se intenta registrar una patente existente, se devuelve HTTP 409 Conflict.
@@ -58,8 +69,44 @@ Estados de Orden: `INGRESADO → EN_REPARACION → TERMINADO → ENTREGADO`. Des
 3. Las órdenes nuevas comienzan en estado `INGRESADO` y deben respetar las transiciones permitidas. Solo pueden cancelarse desde `INGRESADO`. Las transiciones inválidas devuelven HTTP 409.
 4. Una orden no puede pasar a `ENTREGADO` sin tener un costo final registrado. Si se intenta, se devuelve HTTP 409.
 
+
+## Funcionalidades adicionales
+
+**1. Gestión de repuestos e inventario**
+
+Permite registrar repuestos con nombre, precio y stock disponible. Al asociar un repuesto a una orden de reparación, el sistema descuenta automáticamente la cantidad utilizada. Si el stock es insuficiente, devuelve HTTP 409 Conflict.
+
+**2. Cálculo del costo de repuestos**
+
+Las órdenes incluyen el campo `costoRepuestos`, calculado como la suma de los subtotales de los repuestos utilizados. El sistema impide registrar un `costoFinal` inferior a ese importe y devuelve HTTP 400 Bad Request.
+
+**3. Historial de reparaciones por patente**
+
+Permite consultar todas las órdenes de reparación asociadas a un vehículo mediante su patente, ordenadas desde la más reciente hasta la más antigua. El historial incluye estados, fechas, costos y tiempo de reparación.
+
+**4. Facturación mensual**
+
+Permite consultar la facturación de un mes específico mediante el parámetro `mes`, con formato `AAAA-MM`.
+
+La respuesta incluye:
+- `cantidadOrdenes`: número de órdenes entregadas durante el mes.
+- `totalFacturado`: suma de los costos finales de esas órdenes.
+
+**5. Registro de fechas y tiempo de reparación**
+
+Cada orden registra automáticamente las fechas correspondientes a los cambios de estado:
+
+- `fechaIngreso`
+- `fechaInicioReparacion`
+- `fechaTerminacion`
+- `fechaEntrega`
+- `fechaCancelacion`
+
+Una vez finalizada la reparación, el sistema calcula y devuelve `horasEnReparacion`, expresado en horas.
+
+
 ## Pruebas
 
 En `pruebas.http` están las peticiones de ejemplo para probar la API REST (se pueden ejecutar desde VS Code con la extensión REST Client).
 
-También se incluyen las pruebas automáticas del profesor en `.tp/`, que se ejecutan con la aplicación iniciada mediante `bash .tp/correr.sh`.
+
