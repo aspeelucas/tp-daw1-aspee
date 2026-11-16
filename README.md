@@ -17,7 +17,18 @@ Requisitos: Java 21 (Maven viene incluido con `mvnw`).
 
 En Windows, ejecutar `.\mvnw.cmd spring-boot:run`.
 
-La API queda en `http://localhost:8080/api`. La base H2 se guarda en `data/` (no se sube al repositorio). Consola H2: `http://localhost:8080/h2-console`.
+
+La API queda disponible en `http://localhost:8080/api`.
+
+La base de datos H2 utiliza persistencia en disco y se almacena en la carpeta `data/`, conservando los datos al reiniciar la aplicación. Esta carpeta está excluida del repositorio mediante `.gitignore`.
+
+La consola web de H2 está disponible en `http://localhost:8080/h2-console`.
+
+**Datos de conexión:**
+- JDBC URL: `jdbc:h2:file:./data/taller`
+- Usuario: `sa`
+- Contraseña: vacía.
+
 
 ## Modelo
 
